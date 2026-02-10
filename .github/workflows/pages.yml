@@ -2,9 +2,7 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -17,26 +15,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  pages:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # This step is the missing piece in many repos/settings combinations
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      # Upload the static site content (your docs folder)
-      - name: Upload artifact
+      # Upload exactly once (unique name)
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs
+          name: pages-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Deploy
-        id: deployment
+        id: deploy
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-${{ github.run_id }}-${{ github.run_attempt }}
